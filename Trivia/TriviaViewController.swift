@@ -15,54 +15,54 @@ class TriviaViewController: UIViewController {
     
     @IBOutlet var answerButtons: [UIButton]!
     
-    var questions: [Questions] = [
-        
-        Questions(
-            questionNum:"1",
-            topic: "Math",
-            question: "What is 1 + 1",
-            choices:["2","4","5","6"],
-            answer: 0),
-        Questions(
-            questionNum:"2",
-            topic: "Geography",
-            question: "What is the capital of Thailand?",
-            choices:["bangkok","china","new york","Paris"],
-            answer:0 ),
-        Questions(
-            questionNum:"3",
-            topic: "History",
-            question:"Who was the first president of the US?",
-            choices:["Barack Obama", "Donald Trump", "Abraham Lincoln" ,"George Washington"],
-            answer:3)
-    ]
+    private var questions = [Questions]()
     var currentQuestion = 0
     var numOfCorrectAnswr = 0
+    var choices: [String] = []
+    var correctAnswerIndex: Int = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
         questionLabel.layer.cornerRadius = 20.0
         questionLabel.layer.masksToBounds = true
-        showQuestion()
+        loadQuestions()
         // Do any additional setup after loading the view.
+    }
+    func loadQuestions() {
+        TriviaQuestionService.fetchQuestions { fetchedQuestions in
+            self.questions = fetchedQuestions
+            self.currentQuestion = 0
+            self.numOfCorrectAnswr = 0
+            self.showQuestion()
+        }
     }
     
     func showQuestion(){
         
         let question = questions[currentQuestion]
-        questionNumLabel.text = "Question: " + question.questionNum + "/" + String(questions.count)
-        topicLabel.text = question.topic
+        questionNumLabel.text = "Question: \(currentQuestion + 1)/\(questions.count)"
+        topicLabel.text = questions[currentQuestion].category
         questionLabel.text = question.question
-        for(index, button) in answerButtons.enumerated(){
-            button.setTitle(question.choices[index], for: .normal)
-        }
-    }
+        var allAnswers = question.incorrect_answers + [question.correct_answer]
+           allAnswers.shuffle()
+           self.choices = allAnswers
+           self.correctAnswerIndex = allAnswers.firstIndex(of: question.correct_answer) ?? 0
+
+          
+           for (index, button) in answerButtons.enumerated() {
+               if index < allAnswers.count {
+                   button.setTitle(allAnswers[index], for: .normal)
+                   button.isHidden = false
+               } else {
+                   button.isHidden = true
+               }
+           }
+       }
     @IBAction func tappedChoices(_ sender: UIButton) {
         guard let selectedIndex = answerButtons.firstIndex(of: sender) else { return }
-        let correctIndex = questions[currentQuestion].answer
-        if(selectedIndex == correctIndex){
-            numOfCorrectAnswr+=1
-        }
+        if selectedIndex == correctAnswerIndex {
+               numOfCorrectAnswr += 1
+           }
        
         
         if(currentQuestion<questions.count-1){
@@ -75,9 +75,7 @@ class TriviaViewController: UIViewController {
     }
         
     func resetQuiz() {
-        currentQuestion = 0
-        numOfCorrectAnswr = 0
-        showQuestion()
+        loadQuestions()
     }
         
     func showFinalSocre(){

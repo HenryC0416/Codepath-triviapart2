@@ -10,14 +10,18 @@ import UIKit
 
 
 
-struct Questions{
-    let questionNum: String
-    let topic: String
-    let question: String
-    let choices: [String]
-    let answer: Int
+struct Questions: Decodable{
+       let category: String
+       let type: String
+       let question: String
+       let correct_answer: String
+       let incorrect_answers: [String]
+  
 }
 
-
+struct TriviaResponse: Decodable {
+    let response_code: Int
+    let results: [Questions]
+}
 
 
